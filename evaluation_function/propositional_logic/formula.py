@@ -149,25 +149,3 @@ class Implication(BinaryOperator):
 class Biconditional(BinaryOperator):
     def _operator_symbol(self) -> str:
         return "↔"
-
-
-class BracketedFormula(Formula):
-    def __init__(self, formula: Formula):
-        if not isinstance(formula, Formula):
-            raise TypeError("Formula must be a Formula instance")
-        self._formula = formula
-
-    @property
-    def formula(self) -> Formula:
-        return self._formula
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, BracketedFormula):
-            return False
-        return self._formula == other._formula
-
-    def __hash__(self) -> int:
-        return hash(("BracketedFormula", self._formula))
-
-    def __repr__(self) -> str:
-        return f"({self._formula})"

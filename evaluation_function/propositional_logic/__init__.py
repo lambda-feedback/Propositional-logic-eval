@@ -8,8 +8,8 @@ from .formula import (
     Disjunction,
     Implication,
     Biconditional,
-    BracketedFormula,
 )
+from .evaluator import Assignment, FormulaEvaluator
 
 __all__ = [
     "Formula",
@@ -21,5 +21,6 @@ __all__ = [
     "Disjunction",
     "Implication",
     "Biconditional",
-    "BracketedFormula",
+    "Assignment",
+    "FormulaEvaluator",
 ]
