@@ -9,7 +9,13 @@ from .formula import (
     Implication,
     Biconditional,
 )
-from .evaluator import Assignment, FormulaEvaluator
+from .evaluator import (
+    Assignment,
+    FormulaEvaluator,
+    EquivalenceEvaluator,
+    SatisfiabilityEvaluator,
+    TautologyEvaluator,
+)
 
 __all__ = [
     "Formula",
@@ -23,4 +29,7 @@ __all__ = [
     "Biconditional",
     "Assignment",
     "FormulaEvaluator",
+    "EquivalenceEvaluator",
+    "SatisfiabilityEvaluator",
+    "TautologyEvaluator",
 ]
