@@ -143,9 +143,28 @@ def evaluation_function(
         )
 
     
-    # this can be "equivilance", "tautology", "satisfiability"
-    #potnetially can be switched with classes
-    action = params.get("action", None)
+    # check only one of "equivilance", "tautology", "satisfiability" is selected
+    
+    equivalence = params.get("equivalence", False)
+    tautology = params.get("tautology", False)
+    satisfiability = params.get("satisfiability", False)
+
+    #check that 1 and only 1 param is selected
+    if not (equivalence ^ tautology ^ satisfiability):
+
+        if not (equivalence or tautology or satisfiability):
+            #no params selected
+            return Result(
+                is_correct=False,
+                feedback_items=[("invalid param", "please select a param")]
+            )
+        
+        # more than one param selected
+        return Result(
+            is_correct=False,
+            feedback_items=[("invalid param", "please only select 1 param")]
+        )
+
     
     feedback   = None
     is_correct = False
@@ -179,15 +198,43 @@ def evaluation_function(
             feedback_items=[(BuildError, str(e))]
         )
 
-    #swtich on action
-    
-    match action:
-        case "tautology":
-            is_correct = TautologyEvaluator(formula).evaluate()
-        
-        case "satisfiability":
-            is_correct = SatisfiabilityEvaluator(formula).evaluate()
 
-        # equivalence
+    if equivalence:
+        
+        answer_tokenizer = Tokenizer(answer)
+        answer_tokens = []
+
+        # tokenise answer 
+        try:
+            while True:
+                answer_token = answer_tokenizer.next_token()
+                answer_tokens.append(answer_token)
+                if answer_token.type == TokenType.EOF:
+                    break
+        
+        except ValueError as e:
+            return Result(
+                is_correct=False,
+                feedback_items=[(ValueError, str(e))]
+            )
+        
+        # parse answer tokens into Formula
+        try:
+            answer_builder = TreeBuilder(answer_tokens)
+            answer_formula = answer_builder.build()
+        
+        except BuildError as e:
+            return Result(
+                is_correct=False,
+                feedback_items=[(BuildError, str(e))]
+            )
+        
+        is_correct = EquivalenceEvaluator(formula, answer_formula).evaluate()
+        
+
+    elif tautology:
+        is_correct = TautologyEvaluator(formula).evaluate()
+    elif satisfiability:
+        is_correct = SatisfiabilityEvaluator(formula).evaluate()
 
     return Result(is_correct=is_correct)

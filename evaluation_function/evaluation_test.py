@@ -31,7 +31,7 @@ class TestEvaluationFunction(unittest.TestCase):
 
     def test_check_tautology(self):
         
-        response, answer, params = "p ∨ ¬p", "", {"action": "tautology"}
+        response, answer, params = "p ∨ ¬p", "", {"tautology": True}
 
         result = evaluation_function(response, answer, params).to_dict()
 
@@ -39,7 +39,7 @@ class TestEvaluationFunction(unittest.TestCase):
 
     def test_check_tautology_fail(self):
         
-        response, answer, params = "p ∧ ¬p", "", {"action": "tautology"}
+        response, answer, params = "p ∧ ¬p", "", {"tautology": True}
 
         result = evaluation_function(response, answer, params).to_dict()
 
@@ -48,7 +48,7 @@ class TestEvaluationFunction(unittest.TestCase):
     
     def test_check_satisfiability(self):
         
-        response, answer, params = "p ∧ q", "", {"action": "satisfiability"}
+        response, answer, params = "p ∧ q", "", {"satisfiability": True}
 
         result = evaluation_function(response, answer, params).to_dict()
 
@@ -56,8 +56,26 @@ class TestEvaluationFunction(unittest.TestCase):
     
     def test_check_satisfiability_fail(self):
         
-        response, answer, params = "p ∧ ¬p", "", {"action": "satisfiability"}
+        response, answer, params = "p ∧ ¬p", "", {"satisfiability": True}
 
         result = evaluation_function(response, answer, params).to_dict()
 
         self.assertFalse(result.get("is_correct"))
+
+    
+    def test_check_equivalence(self):
+        
+        response, answer, params = "p ∧ q", "p ∧ (q ∨ q)", {"equivalence": True}
+
+        result = evaluation_function(response, answer, params).to_dict()
+
+        self.assertTrue(result.get("is_correct"))
+    
+    def test_check_equivalence_fail(self):
+        
+        response, answer, params = "p ∧ q", "p", {"equivalence": True}
+
+        result = evaluation_function(response, answer, params).to_dict()
+
+        self.assertFalse(result.get("is_correct"))
+    
