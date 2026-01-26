@@ -21,10 +21,31 @@ def preview_function(response: Any, params: Params) -> Result:
     The way you wish to structure you code (all in this function, or
     split into many) is entirely up to you.
     """
+    
+    feedback   = None
+    is_correct = False
+
+    # tokenize response
+    tokenizer = Tokenizer(response)
+    tokens = []
 
     try:
-        return Result(preview=Preview(sympy=response))
-    except FeedbackException as e:
-        return Result(preview=Preview(feedback=str(e)))
-    except Exception as e:
-        return Result(preview=Preview(feedback=str(e)))
+        while True:
+            token = tokenizer.next_token()
+            tokens.append(token)
+            if token.type == TokenType.EOF:
+                break
+    
+    except ValueError as e:
+        return Result(preview=Preview(feedback = str(e)))
+
+
+    # parse tokens into Formula
+    try:
+        builder = TreeBuilder(tokens)
+        formula = builder.build()
+    
+    except BuildError as e:
+        return Result(preview=Preview(feedback = str(e)))
+
+    return Result(preview=Preview(latex=response))
