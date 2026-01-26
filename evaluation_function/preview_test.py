@@ -27,3 +27,87 @@ class TestPreviewFunction(unittest.TestCase):
 
         self.assertIn("preview", result)
         self.assertIsNotNone(result["preview"])
+    
+    def test_successful_and(self):
+        response, params = "P ∧ Q", Params()
+        result = preview_function(response, params)
+        self.assertEqual(response, result.get("preview").get("latex"))
+        self.assertEqual(response, result.get("preview").get("sympy"))
+    
+    def test_successful_or(self):
+        response, params = "P ∨ Q", Params()
+        result = preview_function(response, params)
+        self.assertEqual(response, result.get("preview").get("latex"))
+        self.assertEqual(response, result.get("preview").get("sympy"))
+    
+    def test_successful_not(self):
+        response, params = "¬P", Params()
+        result = preview_function(response, params)
+        self.assertEqual(response, result.get("preview").get("latex"))
+        self.assertEqual(response, result.get("preview").get("sympy"))
+    
+    def test_successful_implies(self):
+        response, params = "P → Q", Params()
+        result = preview_function(response, params)
+        self.assertEqual(response, result.get("preview").get("latex"))
+        self.assertEqual(response, result.get("preview").get("sympy"))
+    
+    def test_successful_biconditional(self):
+        response, params = "P ↔ Q", Params()
+        result = preview_function(response, params)
+        self.assertEqual(response, result.get("preview").get("latex"))
+        self.assertEqual(response, result.get("preview").get("sympy"))
+    
+    def test_complex_expression(self):
+        response, params = "(P ∧ Q) → (R ∨ S)", Params()
+        result = preview_function(response, params)
+        self.assertIn("preview", result)
+        self.assertIsNotNone(result["preview"])
+    
+    def test_nested_negation(self):
+        response, params = "¬(¬P)", Params()
+        result = preview_function(response, params)
+        self.assertIn("preview", result)
+        self.assertIsNotNone(result["preview"])
+    
+    def test_multiple_operators(self):
+        response, params = "P ∧ Q ∧ R", Params()
+        result = preview_function(response, params)
+        self.assertIn("preview", result)
+        self.assertIsNotNone(result["preview"])
+    
+    def test_parentheses(self):
+        response, params = "(P ∧ Q) ∨ (R ∧ S)", Params()
+        result = preview_function(response, params)
+        self.assertIn("preview", result)
+        self.assertIsNotNone(result["preview"])
+    
+    def test_empty_string(self):
+        response, params = "", Params()
+        result = preview_function(response, params)
+        self.assertIn("preview", result)
+    
+    def test_invalid_syntax(self):
+        response, params = "P ∧∧ Q", Params()
+        result = preview_function(response, params)
+        self.assertIn("preview", result)
+    
+    def test_single_variable(self):
+        response, params = "X", Params()
+        result = preview_function(response, params)
+        self.assertEqual(response, result.get("preview").get("latex"))
+        self.assertEqual(response, result.get("preview").get("sympy"))
+    
+    def test_multi_character_variable(self):
+        response, params = "P1 ∧ Q2", Params()
+        result = preview_function(response, params)
+        self.assertIn("preview", result)
+        self.assertIsNotNone(result["preview"])
+    
+    def test_de_morgans_law_expression(self):
+        response, params = "¬(P ∧ Q) ↔ (¬P ∨ ¬Q)", Params()
+        result = preview_function(response, params)
+        self.assertIn("preview", result)
+        self.assertIsNotNone(result["preview"])
+
+

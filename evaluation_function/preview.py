@@ -52,5 +52,7 @@ def preview_function(response: Any, params: Params) -> Result:
     
     except BuildError as e:
         return Result(preview=Preview(feedback = str(e)))
+    except ValueError as e:
+        return Result(preview=Preview(feedback = str(e)))
 
-    return Result(preview=Preview(latex=response))
+    return Result(preview=Preview(latex=response, sympy=response))

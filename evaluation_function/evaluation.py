@@ -101,6 +101,11 @@ def evaluation_function(
             is_correct=False,
             feedback_items=[(BuildError, str(e))]
         )
+    except ValueError as e:
+        return Result(
+            is_correct=False,
+            feedback_items=[(BuildError, str(e))]
+        )
 
 
     if equivalence:
@@ -128,6 +133,11 @@ def evaluation_function(
             answer_formula = answer_builder.build()
         
         except BuildError as e:
+            return Result(
+                is_correct=False,
+                feedback_items=[(BuildError, str(e))]
+            )
+        except ValueError as e:
             return Result(
                 is_correct=False,
                 feedback_items=[(BuildError, str(e))]
