@@ -1,11 +1,13 @@
 
+from lf_toolkit.evaluation import Result
+
 from evaluation_function.domain.formula import (
     Formula,
     Atom
 )
 
 
-from evaluation_function.domain.evaluators import _extract_atoms
+from evaluation_function.domain.evaluators import _extract_atoms, Assignment, FormulaEvaluator
 from evaluation_function.domain.formula import *
 from evaluation_function.parsing.parser import formula_parser
 
@@ -13,7 +15,16 @@ from evaluation_function.parsing.tree_builder_error import BuildError
 
 
 # assume table sent through is of type list[list[str]]
-def evaluate(input: list[list[str]]) -> bool:
+def evaluate_truth_table(input: list[list[str]], num_atoms) -> Result:
+    """
+    Function used to evaluate truth table response
+    ---
+    
+    - `input` the 2D array containing the formuals and the cells of the truth table
+    - `num_atoms` the number of atoms in the truth table
+
+    returns True if truth table is valid
+    """
 
     if len(input) == 0:
         raise Exception("no input was given")
@@ -22,7 +33,7 @@ def evaluate(input: list[list[str]]) -> bool:
 
     # find the atoms of the formula
     formulas = input[0]
-    existing_atoms = set()
+    existing_atoms = {}
 
     for i in range(len(formulas)):
         formula_string = formulas[i]
@@ -41,7 +52,7 @@ def evaluate(input: list[list[str]]) -> bool:
         
         # if formula is an atom, keep track of it
         if isinstance(formula, Atom):
-            existing_atoms.add(formula)
+            existing_atoms[formula] = i
         
         # otherwise check all atoms in formula is to the left on the table (i.e all atoms in formula has been defined)
         else:
@@ -52,18 +63,57 @@ def evaluate(input: list[list[str]]) -> bool:
                 # if an atom is undefined, erro
                 if atom not in existing_atoms:
                     raise Exception(f"in column {i+1}, atom {atom} in formula {formula_string} is undefined")
-    
-    # all formula and its order in the table is valid
-
-    
-                
         
+        # replace strings with 
+        formulas[i] = formula
+    
+    # all formula and its order in the table is valid====
+
+    # check all the cells are valid:
+
+    for i in range(1, len(input)):
+        for j in range(len(input[i])):
+            if input[i][j] == "tt":
+                input[i][j] = True
+            elif input[i][j] == "ff":
+                input[i][j] = False
+            else:
+                raise Exception(f"cell in column {j+1} row {i+1} invalid")
 
 
+    # check that every combination of the atoms is stated in the truth table.
+
+    if len(existing_atoms) != num_atoms:
+        raise Exception(f"missing combinations in truth table")
+    if len(input) - 1 < 2 ** num_atoms:
+        raise Exception(f"missing combinations in truth table")
+    if len(input) - 1 > 2 ** num_atoms:
+        raise Exception(f"excessive combinations in truth table")
 
 
-
-
-
+    unique_rows = set(tuple(row[cell] for cell in existing_atoms.values()) for row in input[1:])
+    if unique_rows < 2 ** num_atoms:
+        raise Exception("dupliated assignment to atoms")
 
     
+    # evaluate truth table row by row
+
+    for i in range(1, len(input)):
+        atoms_mapping = {}
+        for j in range(len(input[i])):
+            formula = formula[j]
+
+            if isinstance(formula, Atom):
+                atoms_mapping[formula] = input[i][j]
+                continue
+
+            assignment = Assignment(atoms_mapping)
+            if FormulaEvaluator(formula, assignment).evaluate() != input[i][j]:
+                return Result(
+                    is_correct=False,
+                    feedback_items=[(Exception, "incorrect cell value")]
+                )
+            
+
+    return Result(is_correct=True)
+            
