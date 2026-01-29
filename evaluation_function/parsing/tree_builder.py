@@ -5,14 +5,7 @@ from .token_stream import TokenStream
 from .expression_builder import ExpressionBuilder
 from .primary_builder import PrimaryBuilder
 from .binary_operator_builder import BinaryOperatorBuilder
-
-
-class BuildError(Exception):
-    def __init__(self, message: str, position: int):
-        self.message = message
-        self.position = position
-        super().__init__(f"{message} at position {position}")
-
+from .tree_builder_error import BuildError
 
 class TreeBuilder:
     def __init__(self, tokens: List[Token], expression_builder: Optional[ExpressionBuilder] = None):

@@ -1,10 +1,9 @@
 from typing import Any
 from lf_toolkit.preview import Result, Params, Preview
 
-from evaluation_function.domain.evaluators import *
 from evaluation_function.domain.formula import *
-from evaluation_function.parsing.tokenizer import *
-from evaluation_function.parsing.tree_builder import *
+from evaluation_function.parsing.parser import formula_parser
+from evaluation_function.parsing.tree_builder_error import BuildError
 
 def preview_function(response: Any, params: Params) -> Result:
     """
@@ -30,25 +29,9 @@ def preview_function(response: Any, params: Params) -> Result:
     feedback   = None
     is_correct = False
 
-    # tokenize response
-    tokenizer = Tokenizer(response)
-    tokens = []
-
+    # parse response into Formula
     try:
-        while True:
-            token = tokenizer.next_token()
-            tokens.append(token)
-            if token.type == TokenType.EOF:
-                break
-    
-    except ValueError as e:
-        return Result(preview=Preview(feedback = str(e)))
-
-
-    # parse tokens into Formula
-    try:
-        builder = TreeBuilder(tokens)
-        formula = builder.build()
+        formula = formula_parser(response)
     
     except BuildError as e:
         return Result(preview=Preview(feedback = str(e)))

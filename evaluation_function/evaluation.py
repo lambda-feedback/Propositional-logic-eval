@@ -3,8 +3,11 @@ from lf_toolkit.evaluation import Result, Params
 
 from evaluation_function.domain.evaluators import *
 from evaluation_function.domain.formula import *
-from evaluation_function.parsing.tokenizer import *
-from evaluation_function.parsing.tree_builder import *
+
+from evaluation_function.parsing.parser import formula_parser
+
+
+from evaluation_function.parsing.tree_builder_error import BuildError
 
 
 def evaluation_function(
@@ -73,28 +76,10 @@ def evaluation_function(
     feedback   = None
     is_correct = False
 
-    # tokenize response
-    tokenizer = Tokenizer(response)
-    tokens = []
 
+    # parse response into Formula
     try:
-        while True:
-            token = tokenizer.next_token()
-            tokens.append(token)
-            if token.type == TokenType.EOF:
-                break
-    
-    except ValueError as e:
-        return Result(
-            is_correct=False,
-            feedback_items=[(ValueError, str(e))]
-        )
-
-
-    # parse tokens into Formula
-    try:
-        builder = TreeBuilder(tokens)
-        formula = builder.build()
+        formula = formula_parser(response)
     
     except BuildError as e:
         return Result(
@@ -104,33 +89,15 @@ def evaluation_function(
     except ValueError as e:
         return Result(
             is_correct=False,
-            feedback_items=[(BuildError, str(e))]
+            feedback_items=[(ValueError, str(e))]
         )
 
 
     if equivalence:
-        
-        answer_tokenizer = Tokenizer(answer)
-        answer_tokens = []
 
         # tokenise answer 
         try:
-            while True:
-                answer_token = answer_tokenizer.next_token()
-                answer_tokens.append(answer_token)
-                if answer_token.type == TokenType.EOF:
-                    break
-        
-        except ValueError as e:
-            return Result(
-                is_correct=False,
-                feedback_items=[(ValueError, str(e))]
-            )
-        
-        # parse answer tokens into Formula
-        try:
-            answer_builder = TreeBuilder(answer_tokens)
-            answer_formula = answer_builder.build()
+            answer_formula = formula_parser(answer)
         
         except BuildError as e:
             return Result(
@@ -140,7 +107,7 @@ def evaluation_function(
         except ValueError as e:
             return Result(
                 is_correct=False,
-                feedback_items=[(BuildError, str(e))]
+                feedback_items=[(ValueError, str(e))]
             )
         
         is_correct = EquivalenceEvaluator(formula, answer_formula).evaluate()
