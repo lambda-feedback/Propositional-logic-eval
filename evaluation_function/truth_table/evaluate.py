@@ -120,10 +120,10 @@ def evaluate_truth_table(input: list[list[str]], num_atoms) -> Result:
 
 
     unique_rows = set(tuple(row[cell] for cell in existing_atoms.values()) for row in input[1:])
-    if unique_rows < 2 ** num_atoms:
+    if len(unique_rows) != 2 ** num_atoms:
         return Result(
             is_correct=False,
-            feedback_items=[(Exception, "dupliated assignment to atoms")]
+            feedback_items=[(Exception, "duplicated assignment to atoms")]
         )
 
     
@@ -132,7 +132,7 @@ def evaluate_truth_table(input: list[list[str]], num_atoms) -> Result:
     for i in range(1, len(input)):
         atoms_mapping = {}
         for j in range(len(input[i])):
-            formula = formula[j]
+            formula = formulas[j]
 
             if isinstance(formula, Atom):
                 atoms_mapping[formula] = input[i][j]
