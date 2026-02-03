@@ -27,9 +27,16 @@ def evaluate_truth_table(input: list[list[str]], num_atoms) -> Result:
     """
 
     if len(input) == 0:
-        raise Exception("no input was given")
+        return Result(
+            is_correct=False,
+            feedback_items=[(Exception, "no input was given")]
+        )
+        
     elif len(input) == 1:
-        raise Exception("Must provide names and its truth values")
+        return Result(
+            is_correct=False,
+            feedback_items=[(Exception, "Must provide names and its truth values")]
+        )
 
     # find the atoms of the formula
     formulas = input[0]
@@ -44,9 +51,15 @@ def evaluate_truth_table(input: list[list[str]], num_atoms) -> Result:
             formula = formula_parser(formula_string)
         
         except BuildError as e:
-            raise Exception(error_message + str(e))
+            return Result(
+                is_correct=False,
+                feedback_items=[(BuildError, error_message + str(e))]
+            )
         except ValueError as e:
-            raise Exception(error_message + str(e))
+            return Result(
+                is_correct=False,
+                feedback_items=[(ValueError, error_message + str(e))]
+            )
 
         # formula is valid
         
@@ -62,7 +75,10 @@ def evaluate_truth_table(input: list[list[str]], num_atoms) -> Result:
 
                 # if an atom is undefined, erro
                 if atom not in existing_atoms:
-                    raise Exception(f"in column {i+1}, atom {atom} in formula {formula_string} is undefined")
+                    return Result(
+                        is_correct=False,
+                        feedback_items=[(Exception, f"in column {i+1}, atom {atom} in formula {formula_string} is undefined")]
+                    )
         
         # replace strings with 
         formulas[i] = formula
@@ -78,22 +94,37 @@ def evaluate_truth_table(input: list[list[str]], num_atoms) -> Result:
             elif input[i][j] == "ff":
                 input[i][j] = False
             else:
-                raise Exception(f"cell in column {j+1} row {i+1} invalid")
+                return Result(
+                    is_correct=False,
+                    feedback_items=[(Exception, f"cell in column {j+1} row {i+1} invalid")]
+                )
 
 
     # check that every combination of the atoms is stated in the truth table.
 
     if len(existing_atoms) != num_atoms:
-        raise Exception(f"missing combinations in truth table")
+        return Result(
+            is_correct=False,
+            feedback_items=[(Exception, f"missing combinations in truth table")]
+        )
     if len(input) - 1 < 2 ** num_atoms:
-        raise Exception(f"missing combinations in truth table")
+        return Result(
+            is_correct=False,
+            feedback_items=[(Exception, f"missing combinations in truth table")]
+        )
     if len(input) - 1 > 2 ** num_atoms:
-        raise Exception(f"excessive combinations in truth table")
+        return Result(
+            is_correct=False,
+            feedback_items=[(Exception, f"excessive combinations in truth table")]
+        )
 
 
     unique_rows = set(tuple(row[cell] for cell in existing_atoms.values()) for row in input[1:])
     if unique_rows < 2 ** num_atoms:
-        raise Exception("dupliated assignment to atoms")
+        return Result(
+            is_correct=False,
+            feedback_items=[(Exception, "dupliated assignment to atoms")]
+        )
 
     
     # evaluate truth table row by row
