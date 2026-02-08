@@ -1,7 +1,7 @@
 from typing import Any
 from lf_toolkit.evaluation import Result, Params
 
-from evaluation_function.domain.evaluators import *
+from evaluation_function.domain.evaluators import _extract_atoms, EquivalenceEvaluator, SatisfiabilityEvaluator, TautologyEvaluator
 from evaluation_function.domain.formula import *
 
 from evaluation_function.parsing.parser import formula_parser
@@ -40,7 +40,16 @@ def evaluation_function(
 
 
     if not isinstance(answer, str):
-        raise Exception("Answer must be a string/text.")
+        return Result(
+            is_correct=False,
+            feedback_items=[("incorrect input", "missing answer object")]
+        )
+
+    if not isinstance(response, dict):
+        return Result(
+            is_correct=False,
+            feedback_items=[("incorrect input", "missing response object")]
+        )
 
         
     response_formula = response.get("formula", None)

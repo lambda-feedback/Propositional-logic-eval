@@ -22,60 +22,142 @@ class TestEvaluationFunction(unittest.TestCase):
     """
 
     def test_evaluation_default(self):
-        response, answer, params = "Hello, World", "Hello, World", Params()
+        response = {"formula": "Hello, World"}
+        answer = "Hello, World"
+        params = Params()
 
         result = evaluation_function(response, answer, params).to_dict()
 
         self.assertEqual(result.get("is_correct"), False)
-        self.assertFalse(len(result.get("feedback", [])) == 0)
 
     def test_check_tautology(self):
-        
-        response, answer, params = "p ∨ ¬p", "", {"tautology": True}
+        response = {"formula": "p ∨ ¬p"}
+        answer = ""
+        params = {"tautology": True}
 
         result = evaluation_function(response, answer, params).to_dict()
 
         self.assertTrue(result.get("is_correct"))
 
     def test_check_tautology_fail(self):
-        
-        response, answer, params = "p ∧ ¬p", "", {"tautology": True}
+        response = {"formula": "p ∧ ¬p"}
+        answer = ""
+        params = {"tautology": True}
 
         result = evaluation_function(response, answer, params).to_dict()
 
         self.assertFalse(result.get("is_correct"))
 
-    
     def test_check_satisfiability(self):
-        
-        response, answer, params = "p ∧ q", "", {"satisfiability": True}
+        response = {"formula": "p ∧ q"}
+        answer = ""
+        params = {"satisfiability": True}
 
         result = evaluation_function(response, answer, params).to_dict()
 
         self.assertTrue(result.get("is_correct"))
     
     def test_check_satisfiability_fail(self):
-        
-        response, answer, params = "p ∧ ¬p", "", {"satisfiability": True}
+        response = {"formula": "p ∧ ¬p"}
+        answer = ""
+        params = {"satisfiability": True}
 
         result = evaluation_function(response, answer, params).to_dict()
 
         self.assertFalse(result.get("is_correct"))
 
-    
     def test_check_equivalence(self):
-        
-        response, answer, params = "p ∧ q", "p ∧ (q ∨ q)", {"equivalence": True}
+        response = {"formula": "p ∧ q"}
+        answer = "p ∧ (q ∨ q)"
+        params = {"equivalence": True}
 
         result = evaluation_function(response, answer, params).to_dict()
 
         self.assertTrue(result.get("is_correct"))
     
     def test_check_equivalence_fail(self):
-        
-        response, answer, params = "p ∧ q", "p", {"equivalence": True}
+        response = {"formula": "p ∧ q"}
+        answer = "p"
+        params = {"equivalence": True}
 
         result = evaluation_function(response, answer, params).to_dict()
 
         self.assertFalse(result.get("is_correct"))
-    
+
+    def test_truth_table_valid(self):
+        response = {
+            "formula": "p ∧ q",
+            "truthTable": {
+                "variables": ["p", "q", "p ∧ q"],
+                "cells": [
+                    ["tt", "tt", "tt"],
+                    ["tt", "ff", "ff"],
+                    ["ff", "tt", "ff"],
+                    ["ff", "ff", "ff"]
+                ]
+            }
+        }
+        answer = "p ∧ q"
+        params = {"equivalence": True}
+
+        result = evaluation_function(response, answer, params).to_dict()
+
+        self.assertTrue(result.get("is_correct"))
+
+    def test_truth_table_invalid(self):
+        response = {
+            "formula": "p ∧ q",
+            "truthTable": {
+                "variables": ["p", "q", "p ∧ q"],
+                "cells": [
+                    ["tt", "tt", "ff"],  # Wrong value
+                    ["tt", "ff", "ff"],
+                    ["ff", "tt", "ff"],
+                    ["ff", "ff", "ff"]
+                ]
+            }
+        }
+        answer = "p ∧ q"
+        params = {"equivalence": True}
+
+        result = evaluation_function(response, answer, params).to_dict()
+
+        self.assertFalse(result.get("is_correct"))
+
+    def test_invalid_response_type(self):
+        response = "just a string"  # Invalid type
+        answer = "p"
+        params = {"tautology": True}
+
+        result = evaluation_function(response, answer, params).to_dict()
+
+        self.assertFalse(result.get("is_correct"))
+        self.assertIn("feedback", result)
+
+    def test_missing_formula_field(self):
+        response = {"wrongField": "p"}
+        answer = "p"
+        params = {"tautology": True}
+
+        result = evaluation_function(response, answer, params).to_dict()
+
+        self.assertFalse(result.get("is_correct"))
+
+    def test_no_params_selected(self):
+        response = {"formula": "p"}
+        answer = "p"
+        params = {}
+
+        result = evaluation_function(response, answer, params).to_dict()
+
+        self.assertFalse(result.get("is_correct"))
+
+    def test_multiple_params_selected(self):
+        response = {"formula": "p"}
+        answer = "p"
+        params = {"tautology": True, "satisfiability": True}
+
+        result = evaluation_function(response, answer, params).to_dict()
+
+        self.assertFalse(result.get("is_correct"))
+

@@ -181,6 +181,33 @@ class TestEvaluateTruthTable(unittest.TestCase):
         result = evaluate_truth_table(variables, cells, 2)
         self.assertTrue(result.is_correct)
 
+    def test_three_atoms(self):
+        """Test a valid truth table with three atoms"""
+        variables = ["p", "q", "r", "p ∧ q ∧ r"]
+        cells = [
+            ["tt", "tt", "tt", "tt"],
+            ["tt", "tt", "ff", "ff"],
+            ["tt", "ff", "tt", "ff"],
+            ["tt", "ff", "ff", "ff"],
+            ["ff", "tt", "tt", "ff"],
+            ["ff", "tt", "ff", "ff"],
+            ["ff", "ff", "tt", "ff"],
+            ["ff", "ff", "ff", "ff"]
+        ]
+        result = evaluate_truth_table(variables, cells, 3)
+        self.assertTrue(result.is_correct)
+
+    def test_only_atoms(self):
+        """Test truth table with only atom columns"""
+        variables = ["p", "q"]
+        cells = [
+            ["tt", "tt"],
+            ["tt", "ff"],
+            ["ff", "tt"],
+            ["ff", "ff"]
+        ]
+        result = evaluate_truth_table(variables, cells, 2)
+        self.assertTrue(result.is_correct)
 
 if __name__ == '__main__':
     unittest.main()
