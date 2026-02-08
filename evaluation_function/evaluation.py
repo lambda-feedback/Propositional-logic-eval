@@ -5,9 +5,9 @@ from evaluation_function.domain.evaluators import *
 from evaluation_function.domain.formula import *
 
 from evaluation_function.parsing.parser import formula_parser
-
-
 from evaluation_function.parsing.tree_builder_error import BuildError
+
+from evaluation_function.truth_table.evaluate import evaluate_truth_table
 
 
 def evaluation_function(
@@ -39,15 +39,69 @@ def evaluation_function(
     """
 
 
-    # if not isinstance(answer, str):
-    #     raise Exception("Answer must be a string/text.")
-    
+    if not isinstance(answer, str):
+        raise Exception("Answer must be a string/text.")
 
-    if not isinstance(response, str):
+        
+    response_formula = response.get("formula", None)
+    if not isinstance(response_formula, str):
         return Result(
             is_correct=False,
             feedback_items=[("incorrect input", "response must be type String")]
         )
+
+    # parse response_formula into Formula
+    try:
+        formula = formula_parser(response_formula)
+    
+    except BuildError as e:
+        return Result(
+            is_correct=False,
+            feedback_items=[(BuildError, str(e))]
+        )
+    except ValueError as e:
+        return Result(
+            is_correct=False,
+            feedback_items=[(ValueError, str(e))]
+        )
+
+
+
+    # check if input is a truth table
+    truth_table = response.get("truthTable", None)
+    if truth_table is not None and isinstance(truth_table, dict):
+
+        variables = truth_table.get("variables", [])
+        cells = truth_table.get("cells", [])
+        
+        if not isinstance(variables, list) or not isinstance(cells, list):
+            return Result(
+                is_correct=False,
+                feedback_items=[("incorrect input", "truthTable must contain 'variables' and 'cells' arrays")]
+            )
+
+        # tokenise answer 
+        try:
+            answer_formula = formula_parser(answer)
+        
+        except BuildError as e:
+            return Result(
+                is_correct=False,
+                feedback_items=[("BuildError", str(e))]
+            )
+        except ValueError as e:
+            return Result(
+                is_correct=False,
+                feedback_items=[("ValueError", str(e))]
+            )
+
+        num_atoms = len(_extract_atoms(answer_formula))
+        
+        # Evaluate the truth table
+        truth_table_result = evaluate_truth_table(variables, cells, num_atoms)
+        if not truth_table_result.is_correct:
+            return truth_table_result
+
 
     
     # check only one of "equivilance", "tautology", "satisfiability" is selected
@@ -71,26 +125,9 @@ def evaluation_function(
             feedback_items=[("invalid param", "please only select 1 param")]
         )
 
-
     
     feedback   = None
     is_correct = False
-
-
-    # parse response into Formula
-    try:
-        formula = formula_parser(response)
-    
-    except BuildError as e:
-        return Result(
-            is_correct=False,
-            feedback_items=[(BuildError, str(e))]
-        )
-    except ValueError as e:
-        return Result(
-            is_correct=False,
-            feedback_items=[(ValueError, str(e))]
-        )
 
 
     if equivalence:

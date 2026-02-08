@@ -12,12 +12,17 @@ Select the sort of evlauation you want to using the check box. Make sure to only
   "response":"<str>",
   "answer":"<str>",
   "params": {
+    "truthTable": "<bool>",
     "equivalence": "<bool>",
     "tautology": "<bool>",
     "satisfiability": "<bool>",
   }
 }
 ```
+
+### `truthTable`
+
+uses the evaluation for truth tables
 
 ### `equivalence`
 

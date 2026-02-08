@@ -14,32 +14,32 @@ from evaluation_function.parsing.parser import formula_parser
 from evaluation_function.parsing.tree_builder_error import BuildError
 
 
-# assume table sent through is of type list[list[str]]
-def evaluate_truth_table(input: list[list[str]], num_atoms) -> Result:
+def evaluate_truth_table(variables: list[str], cells: list[list[str]], num_atoms) -> Result:
     """
     Function used to evaluate truth table response
     ---
     
-    - `input` the 2D array containing the formuals and the cells of the truth table
+    - `variables` array of formula strings (columns of the truth table)
+    - `cells` the 2D array containing only the truth/false values
     - `num_atoms` the number of atoms in the truth table
 
     returns True if truth table is valid
     """
 
-    if len(input) == 0:
+    if len(variables) == 0:
         return Result(
             is_correct=False,
-            feedback_items=[(Exception, "no input was given")]
+            feedback_items=[(Exception, "no variables provided")]
         )
-        
-    elif len(input) == 1:
+    
+    if len(cells) == 0:
         return Result(
             is_correct=False,
-            feedback_items=[(Exception, "Must provide names and its truth values")]
+            feedback_items=[(Exception, "no cells provided")]
         )
 
     # find the atoms of the formula
-    formulas = input[0]
+    formulas = variables
     existing_atoms = {}
 
     for i in range(len(formulas)):
@@ -87,12 +87,12 @@ def evaluate_truth_table(input: list[list[str]], num_atoms) -> Result:
 
     # check all the cells are valid:
 
-    for i in range(1, len(input)):
-        for j in range(len(input[i])):
-            if input[i][j] == "tt":
-                input[i][j] = True
-            elif input[i][j] == "ff":
-                input[i][j] = False
+    for i in range(len(cells)):
+        for j in range(len(cells[i])):
+            if cells[i][j] == "tt":
+                cells[i][j] = True
+            elif cells[i][j] == "ff":
+                cells[i][j] = False
             else:
                 return Result(
                     is_correct=False,
@@ -107,19 +107,19 @@ def evaluate_truth_table(input: list[list[str]], num_atoms) -> Result:
             is_correct=False,
             feedback_items=[(Exception, f"missing combinations in truth table")]
         )
-    if len(input) - 1 < 2 ** num_atoms:
+    if len(cells) < 2 ** num_atoms:
         return Result(
             is_correct=False,
             feedback_items=[(Exception, f"missing combinations in truth table")]
         )
-    if len(input) - 1 > 2 ** num_atoms:
+    if len(cells) > 2 ** num_atoms:
         return Result(
             is_correct=False,
             feedback_items=[(Exception, f"excessive combinations in truth table")]
         )
 
 
-    unique_rows = set(tuple(row[cell] for cell in existing_atoms.values()) for row in input[1:])
+    unique_rows = set(tuple(row[cell] for cell in existing_atoms.values()) for row in cells)
     if len(unique_rows) != 2 ** num_atoms:
         return Result(
             is_correct=False,
@@ -129,17 +129,17 @@ def evaluate_truth_table(input: list[list[str]], num_atoms) -> Result:
     
     # evaluate truth table row by row
 
-    for i in range(1, len(input)):
+    for i in range(len(cells)):
         atoms_mapping = {}
-        for j in range(len(input[i])):
+        for j in range(len(cells[i])):
             formula = formulas[j]
 
             if isinstance(formula, Atom):
-                atoms_mapping[formula] = input[i][j]
+                atoms_mapping[formula] = cells[i][j]
                 continue
 
             assignment = Assignment(atoms_mapping)
-            if FormulaEvaluator(formula, assignment).evaluate() != input[i][j]:
+            if FormulaEvaluator(formula, assignment).evaluate() != cells[i][j]:
                 return Result(
                     is_correct=False,
                     feedback_items=[(Exception, "incorrect cell value")]
