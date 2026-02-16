@@ -32,6 +32,6 @@ ENV FUNCTION_COMMAND="python"
 ENV FUNCTION_ARGS="-m,evaluation_function.main"
 
 # The transport to use for the RPC server
-ENV FUNCTION_RPC_TRANSPORT="ipc"
+ENV FUNCTION_RPC_TRANSPORT="file"
 
 ENV LOG_LEVEL="debug"

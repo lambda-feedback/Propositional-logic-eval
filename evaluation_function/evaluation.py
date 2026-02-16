@@ -38,7 +38,6 @@ def evaluation_function(
     to output the evaluation response.
     """
 
-
     if not isinstance(answer, str):
         return Result(
             is_correct=False,
