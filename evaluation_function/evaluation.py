@@ -1,4 +1,5 @@
 from typing import Any
+import json
 from lf_toolkit.evaluation import Result, Params
 
 from evaluation_function.domain.evaluators import _extract_atoms, EquivalenceEvaluator, SatisfiabilityEvaluator, TautologyEvaluator
@@ -37,12 +38,22 @@ def evaluation_function(
     return types and that evaluation_function() is the main function used
     to output the evaluation response.
     """
-    
+
     if not isinstance(answer, str):
         return Result(
             is_correct=False,
             feedback_items=[("incorrect input", "missing answer object")]
         )
+
+    # If response is a string, parse it as JSON
+    if isinstance(response, str):
+        try:
+            response = json.loads(response)
+        except json.JSONDecodeError as e:
+            return Result(
+                is_correct=False,
+                feedback_items=[("incorrect input", f"response is not valid JSON: {str(e)}")]
+            )
 
     if not isinstance(response, dict):
         return Result(
