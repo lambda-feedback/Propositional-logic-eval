@@ -83,6 +83,7 @@ jobs:
   build:
     name: Build Docker Image
     uses: lambda-feedback/evaluation-function-workflows/.github/workflows/build.yml@main
+    needs: test
     permissions:
       contents: read
       id-token: write
@@ -91,7 +92,7 @@ jobs:
   deploy:
     name: Deploy to Lambda Feedback
     uses: lambda-feedback/evaluation-function-workflows/.github/workflows/deploy.yml@main
-    needs: build
+    needs: test
     with:
       template-repository-name: "lambda-feedback/evaluation-function-boilerplate-python"
     permissions:
