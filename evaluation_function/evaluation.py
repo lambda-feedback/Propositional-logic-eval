@@ -39,121 +39,41 @@ def evaluation_function(
     to output the evaluation response.
     """
 
-    if not isinstance(answer, str):
-        return Result(
-            is_correct=False,
-            feedback_items=[("incorrect input", "missing answer object")]
-        )
 
-    # If response is a string, parse it as JSON
-    if isinstance(response, str):
-        try:
-            response = json.loads(response)
-        except json.JSONDecodeError as e:
-            return Result(
-                is_correct=False,
-                feedback_items=[("incorrect input", f"response is not valid JSON: {str(e)}")]
-            )
-
-    if not isinstance(response, dict):
-        return Result(
-            is_correct=False,
-            feedback_items=[("incorrect input", "missing response object")]
-        )
-
-        
-    response_formula = response.get("formula", None)
-    if not isinstance(response_formula, str):
-        return Result(
-            is_correct=False,
-            feedback_items=[("incorrect input", "response must be type String")]
-        )
-
-    # parse response_formula into Formula
     try:
-        formula = formula_parser(response_formula)
-    
-    except BuildError as e:
-        return Result(
-            is_correct=False,
-            feedback_items=[(BuildError, str(e))]
-        )
-    except ValueError as e:
-        return Result(
-            is_correct=False,
-            feedback_items=[(ValueError, str(e))]
-        )
-
-
-
-    # check if input is a truth table
-    truth_table = response.get("truthTable", None)
-    if truth_table is not None and isinstance(truth_table, dict):
-
-        variables = truth_table.get("variables", [])
-        cells = truth_table.get("cells", [])
-        
-        if not isinstance(variables, list) or not isinstance(cells, list):
+        if not isinstance(answer, str):
             return Result(
                 is_correct=False,
-                feedback_items=[("incorrect input", "truthTable must contain 'variables' and 'cells' arrays")]
+                feedback_items=[("incorrect input", "missing answer object")]
             )
 
-        # tokenise answer 
+        # If response is a string, parse it as JSON
+        if isinstance(response, str):
+            try:
+                response = json.loads(response)
+            except json.JSONDecodeError as e:
+                return Result(
+                    is_correct=False,
+                    feedback_items=[("incorrect input", f"response is not valid JSON: {str(e)}")]
+                )
+
+        if not isinstance(response, dict):
+            return Result(
+                is_correct=False,
+                feedback_items=[("incorrect input", "missing response object")]
+            )
+
+            
+        response_formula = response.get("formula", None)
+        if not isinstance(response_formula, str):
+            return Result(
+                is_correct=False,
+                feedback_items=[("incorrect input", "response must be type String")]
+            )
+
+        # parse response_formula into Formula
         try:
-            answer_formula = formula_parser(answer)
-        
-        except BuildError as e:
-            return Result(
-                is_correct=False,
-                feedback_items=[("BuildError", str(e))]
-            )
-        except ValueError as e:
-            return Result(
-                is_correct=False,
-                feedback_items=[("ValueError", str(e))]
-            )
-
-        num_atoms = len(_extract_atoms(answer_formula))
-        
-        # Evaluate the truth table
-        truth_table_result = evaluate_truth_table(variables, cells, num_atoms)
-        if not truth_table_result.is_correct:
-            return truth_table_result
-
-
-    
-    # check only one of "equivilance", "tautology", "satisfiability" is selected
-    
-    equivalence = params.get("equivalence", False)
-    tautology = params.get("tautology", False)
-    satisfiability = params.get("satisfiability", False)
-
-
-    #check that 1 and only 1 param is selected
-    num_selected = sum([equivalence, tautology, satisfiability])
-
-    if num_selected == 0:
-        return Result(
-            is_correct=False,
-            feedback_items=[("invalid param", "please select a param")]
-        )
-    elif num_selected > 1:
-        return Result(
-            is_correct=False,
-            feedback_items=[("invalid param", "please only select 1 param")]
-        )
-
-    
-    feedback   = None
-    is_correct = False
-
-
-    if equivalence:
-
-        # tokenise answer 
-        try:
-            answer_formula = formula_parser(answer)
+            formula = formula_parser(response_formula)
         
         except BuildError as e:
             return Result(
@@ -165,13 +85,101 @@ def evaluation_function(
                 is_correct=False,
                 feedback_items=[(ValueError, str(e))]
             )
-        
-        is_correct = EquivalenceEvaluator(formula, answer_formula).evaluate()
-        
 
-    elif tautology:
-        is_correct = TautologyEvaluator(formula).evaluate()
-    elif satisfiability:
-        is_correct = SatisfiabilityEvaluator(formula).evaluate()
 
-    return Result(is_correct=is_correct)
+
+        # check if input is a truth table
+        truth_table = response.get("truthTable", None)
+        if truth_table is not None and isinstance(truth_table, dict):
+
+            variables = truth_table.get("variables", [])
+            cells = truth_table.get("cells", [])
+            
+            if not isinstance(variables, list) or not isinstance(cells, list):
+                return Result(
+                    is_correct=False,
+                    feedback_items=[("incorrect input", "truthTable must contain 'variables' and 'cells' arrays")]
+                )
+
+            # tokenise answer 
+            try:
+                answer_formula = formula_parser(answer)
+            
+            except BuildError as e:
+                return Result(
+                    is_correct=False,
+                    feedback_items=[("BuildError", str(e))]
+                )
+            except ValueError as e:
+                return Result(
+                    is_correct=False,
+                    feedback_items=[("ValueError", str(e))]
+                )
+
+            num_atoms = len(_extract_atoms(answer_formula))
+            
+            # Evaluate the truth table
+            truth_table_result = evaluate_truth_table(variables, cells, num_atoms)
+            if not truth_table_result.is_correct:
+                return truth_table_result
+
+
+        
+        # check only one of "equivilance", "tautology", "satisfiability" is selected
+        
+        equivalence = params.get("equivalence", False)
+        tautology = params.get("tautology", False)
+        satisfiability = params.get("satisfiability", False)
+
+
+        #check that 1 and only 1 param is selected
+        num_selected = sum([equivalence, tautology, satisfiability])
+
+        if num_selected == 0:
+            return Result(
+                is_correct=False,
+                feedback_items=[("invalid param", "please select a param")]
+            )
+        elif num_selected > 1:
+            return Result(
+                is_correct=False,
+                feedback_items=[("invalid param", "please only select 1 param")]
+            )
+
+        
+        feedback   = None
+        is_correct = False
+
+
+        if equivalence:
+
+            # tokenise answer 
+            try:
+                answer_formula = formula_parser(answer)
+            
+            except BuildError as e:
+                return Result(
+                    is_correct=False,
+                    feedback_items=[(BuildError, str(e))]
+                )
+            except ValueError as e:
+                return Result(
+                    is_correct=False,
+                    feedback_items=[(ValueError, str(e))]
+                )
+            
+            is_correct = EquivalenceEvaluator(formula, answer_formula).evaluate()
+            
+
+        elif tautology:
+            is_correct = TautologyEvaluator(formula).evaluate()
+        elif satisfiability:
+            is_correct = SatisfiabilityEvaluator(formula).evaluate()
+
+        return Result(is_correct=is_correct)
+        
+    except Exception as e:
+        return Result(
+            is_correct=False,
+            feedback_items=[("Error", str(e))]
+        )
