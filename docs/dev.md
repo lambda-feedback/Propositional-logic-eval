@@ -9,32 +9,34 @@ Select the sort of evlauation you want to using the check box. Make sure to only
 
 ```json
 {
-  "response":"<str>",
-  "answer":"<str>",
-  "params": {
-    "truthTable": "<bool>",
-    "equivalence": "<bool>",
-    "tautology": "<bool>",
-    "satisfiability": "<bool>",
-  }
+  "response": { "formula": "<str>", "truthTable": null | { "variables": ["<str>"], "cells": [[ "<str>" ]] } },
+  "answer": {
+    "satisability": true | false,
+    "tautology": true | false,
+    "equivalent": null | "<str>",
+    "truthTable": null | { }
+  },
+  "params": { }
 }
 ```
 
+Exactly one of `satisability`, `tautology`, `equivalent` (non-null), or `truthTable` (non-null) must be set in `answer` to choose the evaluation mode.
+
 ### `truthTable`
 
-uses the evaluation for truth tables
+When `answer.truthTable` is not null, uses truth table evaluation (response must include `truthTable` with `variables` and `cells`).
 
-### `equivalence`
+### `equivalent`
 
-checks if response formula and answer formula are equivalent
+When `answer.equivalent` is a string, checks if response formula and that formula are equivalent.
 
 ### `tautology`
 
-checks if response formula is a tautology
+When `answer.tautology` is true, checks if response formula is a tautology.
 
-### `satisfiability`
+### `satisability`
 
-checks if response formula is satisfiabiable
+When `answer.satisability` is true, checks if response formula is satisfiable.
 
 ## Outputs
 

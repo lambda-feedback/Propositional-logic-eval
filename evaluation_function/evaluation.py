@@ -41,7 +41,7 @@ def evaluation_function(
 
 
     try:
-        if not isinstance(answer, str):
+        if not isinstance(answer, dict):
             return Result(
                 is_correct=False,
                 feedback_items=[("incorrect input", "missing answer object")]
@@ -66,11 +66,42 @@ def evaluation_function(
 
         formula = formula_parser(response_formula)
 
-        # check if input is a truth table
-        truth_table = response.get("truthTable", None)
-        if truth_table is not None and isinstance(truth_table, dict):
-            variables = truth_table.get("variables", [])
-            cells = truth_table.get("cells", [])
+        # Answer shape: satisability (bool), tautology (bool), equivalent (None|str), truthTable (None|dict)
+        satisability = answer.get("satisability", False) is True
+        tautology = answer.get("tautology", False) is True
+        equivalent = answer.get("equivalent")
+        if equivalent is not None and not isinstance(equivalent, str):
+            equivalent = None
+        elif equivalent is not None and isinstance(equivalent, str) and equivalent.strip() == "":
+            equivalent = None
+        answer_truth_table = answer.get("truthTable")
+
+        has_equivalence = equivalent is not None
+        has_truth_table = answer_truth_table is not None
+
+        num_selected = sum([satisability, tautology, has_equivalence, has_truth_table])
+
+        if num_selected == 0:
+            return Result(
+                is_correct=False,
+                feedback_items=[("invalid param", "please select a param")]
+            )
+        if num_selected > 1:
+            return Result(
+                is_correct=False,
+                feedback_items=[("invalid param", "please only select 1 param")]
+            )
+
+        # Truth table mode: validate response truth table if present
+        response_truth_table = response.get("truthTable", None)
+        if has_truth_table:
+            if response_truth_table is None or not isinstance(response_truth_table, dict):
+                return Result(
+                    is_correct=False,
+                    feedback_items=[("incorrect input", "truthTable required when answer expects truth table")]
+                )
+            variables = response_truth_table.get("variables", [])
+            cells = response_truth_table.get("cells", [])
 
             if not isinstance(variables, list) or not isinstance(cells, list):
                 return Result(
@@ -78,38 +109,21 @@ def evaluation_function(
                     feedback_items=[("incorrect input", "truthTable must contain 'variables' and 'cells' arrays")]
                 )
 
-            answer_formula = formula_parser(answer)
-            num_atoms = len(_extract_atoms(answer_formula))
-
+            num_atoms = len(_extract_atoms(formula))
             truth_table_result = evaluate_truth_table(variables, cells, num_atoms)
             if not truth_table_result.is_correct:
                 return truth_table_result
 
-        equivalence = params.get("equivalence", False)
-        tautology = params.get("tautology", False)
-        satisfiability = params.get("satisfiability", False)
-
-        num_selected = sum([equivalence, tautology, satisfiability])
-
-        if num_selected == 0:
-            return Result(
-                is_correct=False,
-                feedback_items=[("invalid param", "please select a param")]
-            )
-        elif num_selected > 1:
-            return Result(
-                is_correct=False,
-                feedback_items=[("invalid param", "please only select 1 param")]
-            )
-
         is_correct = False
-        if equivalence:
-            answer_formula = formula_parser(answer)
+        if has_equivalence:
+            answer_formula = formula_parser(equivalent)
             is_correct = EquivalenceEvaluator(formula, answer_formula).evaluate()
         elif tautology:
             is_correct = TautologyEvaluator(formula).evaluate()
-        elif satisfiability:
+        elif satisability:
             is_correct = SatisfiabilityEvaluator(formula).evaluate()
+        elif has_truth_table:
+            is_correct = True  # already validated above
 
         return Result(is_correct=is_correct)
 

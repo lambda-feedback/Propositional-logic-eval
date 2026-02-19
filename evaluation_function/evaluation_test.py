@@ -23,7 +23,7 @@ class TestEvaluationFunction(unittest.TestCase):
 
     def test_evaluation_default(self):
         response = {"formula": "Hello, World"}
-        answer = "Hello, World"
+        answer = "Hello, World"  # invalid: answer must be dict
         params = Params()
 
         result = evaluation_function(response, answer, params).to_dict()
@@ -32,8 +32,8 @@ class TestEvaluationFunction(unittest.TestCase):
 
     def test_check_tautology(self):
         response = {"formula": "p ∨ ¬p"}
-        answer = ""
-        params = {"tautology": True}
+        answer = {"satisability": False, "tautology": True, "equivalent": None, "truthTable": None}
+        params = Params()
 
         result = evaluation_function(response, answer, params).to_dict()
 
@@ -41,8 +41,8 @@ class TestEvaluationFunction(unittest.TestCase):
 
     def test_check_tautology_fail(self):
         response = {"formula": "p ∧ ¬p"}
-        answer = ""
-        params = {"tautology": True}
+        answer = {"satisability": False, "tautology": True, "equivalent": None, "truthTable": None}
+        params = Params()
 
         result = evaluation_function(response, answer, params).to_dict()
 
@@ -50,17 +50,17 @@ class TestEvaluationFunction(unittest.TestCase):
 
     def test_check_satisfiability(self):
         response = {"formula": "p ∧ q"}
-        answer = ""
-        params = {"satisfiability": True}
+        answer = {"satisability": True, "tautology": False, "equivalent": None, "truthTable": None}
+        params = Params()
 
         result = evaluation_function(response, answer, params).to_dict()
 
         self.assertTrue(result.get("is_correct"))
-    
+
     def test_check_satisfiability_fail(self):
         response = {"formula": "p ∧ ¬p"}
-        answer = ""
-        params = {"satisfiability": True}
+        answer = {"satisability": True, "tautology": False, "equivalent": None, "truthTable": None}
+        params = Params()
 
         result = evaluation_function(response, answer, params).to_dict()
 
@@ -68,17 +68,17 @@ class TestEvaluationFunction(unittest.TestCase):
 
     def test_check_equivalence(self):
         response = {"formula": "p ∧ q"}
-        answer = "p ∧ (q ∨ q)"
-        params = {"equivalence": True}
+        answer = {"satisability": False, "tautology": False, "equivalent": "p ∧ (q ∨ q)", "truthTable": None}
+        params = Params()
 
         result = evaluation_function(response, answer, params).to_dict()
 
         self.assertTrue(result.get("is_correct"))
-    
+
     def test_check_equivalence_fail(self):
         response = {"formula": "p ∧ q"}
-        answer = "p"
-        params = {"equivalence": True}
+        answer = {"satisability": False, "tautology": False, "equivalent": "p", "truthTable": None}
+        params = Params()
 
         result = evaluation_function(response, answer, params).to_dict()
 
@@ -97,8 +97,8 @@ class TestEvaluationFunction(unittest.TestCase):
                 ]
             }
         }
-        answer = "p ∧ q"
-        params = {"equivalence": True}
+        answer = {"satisability": False, "tautology": False, "equivalent": None, "truthTable": {}}
+        params = Params()
 
         result = evaluation_function(response, answer, params).to_dict()
 
@@ -117,8 +117,8 @@ class TestEvaluationFunction(unittest.TestCase):
                 ]
             }
         }
-        answer = "p ∧ q"
-        params = {"equivalence": True}
+        answer = {"satisability": False, "tautology": False, "equivalent": None, "truthTable": {}}
+        params = Params()
 
         result = evaluation_function(response, answer, params).to_dict()
 
@@ -126,8 +126,8 @@ class TestEvaluationFunction(unittest.TestCase):
 
     def test_invalid_response_type(self):
         response = "just a string"  # Invalid type
-        answer = "p"
-        params = {"tautology": True}
+        answer = {"satisability": False, "tautology": True, "equivalent": None, "truthTable": None}
+        params = Params()
 
         result = evaluation_function(response, answer, params).to_dict()
 
@@ -136,8 +136,8 @@ class TestEvaluationFunction(unittest.TestCase):
 
     def test_missing_formula_field(self):
         response = {"wrongField": "p"}
-        answer = "p"
-        params = {"tautology": True}
+        answer = {"satisability": False, "tautology": True, "equivalent": None, "truthTable": None}
+        params = Params()
 
         result = evaluation_function(response, answer, params).to_dict()
 
@@ -145,8 +145,8 @@ class TestEvaluationFunction(unittest.TestCase):
 
     def test_no_params_selected(self):
         response = {"formula": "p"}
-        answer = "p"
-        params = {}
+        answer = {"satisability": False, "tautology": False, "equivalent": None, "truthTable": None}
+        params = Params()
 
         result = evaluation_function(response, answer, params).to_dict()
 
@@ -154,8 +154,8 @@ class TestEvaluationFunction(unittest.TestCase):
 
     def test_multiple_params_selected(self):
         response = {"formula": "p"}
-        answer = "p"
-        params = {"tautology": True, "satisfiability": True}
+        answer = {"satisability": True, "tautology": True, "equivalent": None, "truthTable": None}
+        params = Params()
 
         result = evaluation_function(response, answer, params).to_dict()
 
