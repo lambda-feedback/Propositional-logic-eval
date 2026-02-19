@@ -11,20 +11,20 @@ Select the sort of evlauation you want to using the check box. Make sure to only
 {
   "response": { "formula": "<str>", "truthTable": null | { "variables": ["<str>"], "cells": [[ "<str>" ]] } },
   "answer": {
-    "satisability": true | false,
+    "satisfiability": true | false,
     "tautology": true | false,
     "equivalent": null | "<str>",
-    "truthTable": null | { }
+    "validTruthTable": true | false
   },
   "params": { }
 }
 ```
 
-Exactly one of `satisability`, `tautology`, `equivalent` (non-null), or `truthTable` (non-null) must be set in `answer` to choose the evaluation mode.
+Exactly one of `satisfiability`, `tautology`, `equivalent` (non-null), or `validTruthTable` (true) must be set in `answer` to choose the evaluation mode.
 
-### `truthTable`
+### `validTruthTable`
 
-When `answer.truthTable` is not null, uses truth table evaluation (response must include `truthTable` with `variables` and `cells`).
+When `answer.validTruthTable` is true, uses truth table evaluation (response must include `truthTable` with `variables` and `cells`).
 
 ### `equivalent`
 
@@ -34,9 +34,9 @@ When `answer.equivalent` is a string, checks if response formula and that formul
 
 When `answer.tautology` is true, checks if response formula is a tautology.
 
-### `satisability`
+### `satisfiability`
 
-When `answer.satisability` is true, checks if response formula is satisfiable.
+When `answer.satisfiability` is true, checks if response formula is satisfiable.
 
 ## Outputs
 

@@ -66,25 +66,24 @@ def evaluation_function(
 
         formula = formula_parser(response_formula)
 
-        # Answer shape: satisability (bool), tautology (bool), equivalent (None|str), truthTable (None|dict)
-        satisability = answer.get("satisability", False) is True
+        # Answer shape: satisfiability (bool), tautology (bool), equivalent (None|str), validTruthTable (bool)
+        satisfiability = answer.get("satisfiability", answer.get("satisability", False)) is True
         tautology = answer.get("tautology", False) is True
         equivalent = answer.get("equivalent")
         if equivalent is not None and not isinstance(equivalent, str):
             equivalent = None
         elif equivalent is not None and isinstance(equivalent, str) and equivalent.strip() == "":
             equivalent = None
-        answer_truth_table = answer.get("truthTable")
-
+        # validTruthTable (bool) or truthTable (None|dict) for backward compat
+        has_truth_table = answer.get("validTruthTable", False) is True or answer.get("truthTable") is not None
         has_equivalence = equivalent is not None
-        has_truth_table = answer_truth_table is not None
 
-        num_selected = sum([satisability, tautology, has_equivalence, has_truth_table])
+        num_selected = sum([satisfiability, tautology, has_equivalence, has_truth_table])
 
         if num_selected == 0:
             return Result(
                 is_correct=False,
-                feedback_items=[("invalid param", f"please select a param. got {answer}")]
+                feedback_items=[("invalid param", "please select a param")]
             )
         if num_selected > 1:
             return Result(
@@ -120,7 +119,7 @@ def evaluation_function(
             is_correct = EquivalenceEvaluator(formula, answer_formula).evaluate()
         elif tautology:
             is_correct = TautologyEvaluator(formula).evaluate()
-        elif satisability:
+        elif satisfiability:
             is_correct = SatisfiabilityEvaluator(formula).evaluate()
         elif has_truth_table:
             is_correct = True  # already validated above
