@@ -44,7 +44,7 @@ def evaluation_function(
         if not isinstance(answer, dict):
             return Result(
                 is_correct=False,
-                feedback_items=[("incorrect input", "missing answer object")]
+                feedback_items=[("incorrect input", f"missing answer object. got {answer}")]
             )
 
         # If response is a string, parse it as JSON
