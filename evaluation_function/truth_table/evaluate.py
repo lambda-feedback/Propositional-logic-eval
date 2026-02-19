@@ -89,9 +89,9 @@ def evaluate_truth_table(variables: list[str], cells: list[list[str]], num_atoms
 
     for i in range(len(cells)):
         for j in range(len(cells[i])):
-            if cells[i][j] == "tt":
+            if cells[i][j] in ["tt", "T", "⊤"]:
                 cells[i][j] = True
-            elif cells[i][j] == "ff":
+            elif cells[i][j] in ["ff", "F", "⊥"]:
                 cells[i][j] = False
             else:
                 return Result(
