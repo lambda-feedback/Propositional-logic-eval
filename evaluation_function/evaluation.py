@@ -44,7 +44,7 @@ def evaluation_function(
         if not isinstance(answer, dict):
             return Result(
                 is_correct=False,
-                feedback_items=[("incorrect input", f"missing answer object. got {answer}")]
+                feedback_items=[("incorrect input", "missing answer object")]
             )
 
         # If response is a string, parse it as JSON
@@ -67,15 +67,15 @@ def evaluation_function(
         formula = formula_parser(response_formula)
 
         # Answer shape: satisfiability (bool), tautology (bool), equivalent (None|str), validTruthTable (bool)
-        satisfiability = answer.get("satisfiability", answer.get("satisability", False)) is True
+        satisfiability = answer.get("satisfiability", False) is True
         tautology = answer.get("tautology", False) is True
         equivalent = answer.get("equivalent")
         if equivalent is not None and not isinstance(equivalent, str):
             equivalent = None
         elif equivalent is not None and isinstance(equivalent, str) and equivalent.strip() == "":
             equivalent = None
-        # validTruthTable (bool) or truthTable (None|dict) for backward compat
-        has_truth_table = answer.get("validTruthTable", False) is True or answer.get("truthTable") is not None
+            
+        has_truth_table = answer.get("validTruthTable", False) is True
         has_equivalence = equivalent is not None
 
         num_selected = sum([satisfiability, tautology, has_equivalence, has_truth_table])
@@ -114,16 +114,49 @@ def evaluation_function(
                 return truth_table_result
 
         is_correct = False
+        feedback = []
+
         if has_equivalence:
             answer_formula = formula_parser(equivalent)
-            is_correct = EquivalenceEvaluator(formula, answer_formula).evaluate()
+            ev = EquivalenceEvaluator(formula, answer_formula)
+            is_correct, counterex = ev.evaluate_with_counterexample()
+            if not is_correct:
+                feedback.append((
+                    "equivalence",
+                    f"Comparing your formula \"{response_formula}\" with expected \"{equivalent}\". They are not equivalent."
+                ))
+                if counterex:
+                    asn = ", ".join(f"{k}={counterex['assignment'][k]}" for k in sorted(counterex["assignment"]))
+                    feedback.append((
+                        "counterexample",
+                        f"Under assignment ({asn}): your formula = {counterex['response_value']}, expected formula = {counterex['expected_value']}."
+                    ))
         elif tautology:
-            is_correct = TautologyEvaluator(formula).evaluate()
+            ev = TautologyEvaluator(formula)
+            is_correct, counterex = ev.evaluate_with_counterexample()
+            if not is_correct:
+                feedback.append((
+                    "tautology",
+                    f"Formula \"{response_formula}\" is not a tautology."
+                ))
+                if counterex:
+                    asn = ", ".join(f"{k}={counterex['assignment'][k]}" for k in sorted(counterex["assignment"]))
+                    feedback.append((
+                        "counterexample",
+                        f"Under assignment ({asn}) the formula evaluates to False."
+                    ))
         elif satisfiability:
             is_correct = SatisfiabilityEvaluator(formula).evaluate()
+            if not is_correct:
+                feedback.append((
+                    "satisfiability",
+                    f"Formula \"{response_formula}\" is not satisfiable: no assignment of the atoms makes it true."
+                ))
         elif has_truth_table:
             is_correct = True  # already validated above
 
+        if feedback:
+            return Result(is_correct=False, feedback_items=feedback)
         return Result(is_correct=is_correct)
 
     except Exception as e:

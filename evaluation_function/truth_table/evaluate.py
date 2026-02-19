@@ -139,10 +139,16 @@ def evaluate_truth_table(variables: list[str], cells: list[list[str]], num_atoms
                 continue
 
             assignment = Assignment(atoms_mapping)
-            if FormulaEvaluator(formula, assignment).evaluate() != cells[i][j]:
+            expected = FormulaEvaluator(formula, assignment).evaluate()
+            got = cells[i][j]
+            if expected != got:
+                formula_str = variables[j] if j < len(variables) else f"column {j+1}"
                 return Result(
                     is_correct=False,
-                    feedback_items=[(Exception, "incorrect cell value")]
+                    feedback_items=[(
+                        Exception,
+                        f"incorrect cell value at row {i+1}, column {j+1} (formula \"{formula_str}\"): expected {'T' if expected else 'F'}, got {'T' if got else 'F'}."
+                    )]
                 )
             
 

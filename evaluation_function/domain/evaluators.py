@@ -76,21 +76,31 @@ class EquivalenceEvaluator:
         self._formula2 = formula2
 
     def evaluate(self) -> bool:
+        ok, _ = self.evaluate_with_counterexample()
+        return ok
+
+    def evaluate_with_counterexample(self) -> tuple[bool, dict | None]:
+        """Returns (are_equivalent, counterexample_or_none). Counterexample has assignment, response_value, expected_value."""
         atoms1 = _extract_atoms(self._formula1)
         atoms2 = _extract_atoms(self._formula2)
         all_atoms = list(atoms1 | atoms2)
-        
+
         for assignment_values in product([False, True], repeat=len(all_atoms)):
             assignment_dict = {atom: val for atom, val in zip(all_atoms, assignment_values)}
             assignment = Assignment(assignment_dict)
-            
+
             evaluator1 = FormulaEvaluator(self._formula1, assignment)
             evaluator2 = FormulaEvaluator(self._formula2, assignment)
-            
-            if evaluator1.evaluate() != evaluator2.evaluate():
-                return False
-        
-        return True
+            v1, v2 = evaluator1.evaluate(), evaluator2.evaluate()
+
+            if v1 != v2:
+                assignment_str = {atom.name: val for atom, val in assignment_dict.items()}
+                return False, {
+                    "assignment": assignment_str,
+                    "response_value": v1,
+                    "expected_value": v2,
+                }
+        return True, None
 
 
 class SatisfiabilityEvaluator:
@@ -117,15 +127,21 @@ class TautologyEvaluator:
         self._formula = formula
 
     def evaluate(self) -> bool:
+        ok, _ = self.evaluate_with_counterexample()
+        return ok
+
+    def evaluate_with_counterexample(self) -> tuple[bool, dict | None]:
+        """Returns (is_tautology, counterexample_or_none). Counterexample has assignment and formula_value."""
         atoms = _extract_atoms(self._formula)
         all_atoms = list(atoms)
-        
+
         for assignment_values in product([False, True], repeat=len(all_atoms)):
             assignment_dict = {atom: val for atom, val in zip(all_atoms, assignment_values)}
             assignment = Assignment(assignment_dict)
-            
+
             evaluator = FormulaEvaluator(self._formula, assignment)
-            if not evaluator.evaluate():
-                return False
-        
-        return True
+            val = evaluator.evaluate()
+            if not val:
+                assignment_str = {atom.name: v for atom, v in assignment_dict.items()}
+                return False, {"assignment": assignment_str, "formula_value": val}
+        return True, None
