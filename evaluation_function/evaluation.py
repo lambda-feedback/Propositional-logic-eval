@@ -84,7 +84,7 @@ def evaluation_function(
         if num_selected == 0:
             return Result(
                 is_correct=False,
-                feedback_items=[("invalid param", "please select a param")]
+                feedback_items=[("invalid param", f"please select a param. got {answer}")]
             )
         if num_selected > 1:
             return Result(
