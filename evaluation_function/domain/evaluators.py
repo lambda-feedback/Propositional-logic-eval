@@ -1,4 +1,4 @@
-from itertools import product
+from itertools import product, permutations
 from typing import Mapping, Set
 from .formula import (
     Formula,
@@ -71,6 +71,8 @@ def _extract_atoms(formula: Formula) -> Set[Atom]:
 
 
 class EquivalenceEvaluator:
+    """Checks if two formulas are equivalent up to renaming of atoms (so e.g. 's' and 'p' are equivalent)."""
+
     def __init__(self, formula1: Formula, formula2: Formula):
         self._formula1 = formula1
         self._formula2 = formula2
@@ -80,27 +82,41 @@ class EquivalenceEvaluator:
         return ok
 
     def evaluate_with_counterexample(self) -> tuple[bool, dict | None]:
-        """Returns (are_equivalent, counterexample_or_none). Counterexample has assignment, response_value, expected_value."""
-        atoms1 = _extract_atoms(self._formula1)
-        atoms2 = _extract_atoms(self._formula2)
-        all_atoms = list(atoms1 | atoms2)
+        """Returns (are_equivalent, counterexample_or_none). Equivalent = same truth behaviour under some renaming of atoms."""
+        atoms1 = sorted(_extract_atoms(self._formula1), key=lambda a: a.name)
+        atoms2 = sorted(_extract_atoms(self._formula2), key=lambda a: a.name)
 
-        for assignment_values in product([False, True], repeat=len(all_atoms)):
-            assignment_dict = {atom: val for atom, val in zip(all_atoms, assignment_values)}
-            assignment = Assignment(assignment_dict)
+        if len(atoms1) != len(atoms2):
+            return False, {
+                "assignment": {},
+                "response_value": None,
+                "expected_value": None,
+                "reason": f"different number of atoms: {len(atoms1)} vs {len(atoms2)}",
+            }
 
-            evaluator1 = FormulaEvaluator(self._formula1, assignment)
-            evaluator2 = FormulaEvaluator(self._formula2, assignment)
-            v1, v2 = evaluator1.evaluate(), evaluator2.evaluate()
+        n = len(atoms1)
+        first_counterexample = None
+        for perm in permutations(range(n)):
+            # perm[j] = index in atoms2 that atoms1[j] is renamed to; so atoms1[j] gets value of atoms2[perm[j]]
+            for assignment_values in product([False, True], repeat=n):
+                assignment2_dict = {atoms2[i]: assignment_values[i] for i in range(n)}
+                assignment1_dict = {atoms1[j]: assignment_values[perm[j]] for j in range(n)}
+                a1 = Assignment(assignment1_dict)
+                a2 = Assignment(assignment2_dict)
+                v1 = FormulaEvaluator(self._formula1, a1).evaluate()
+                v2 = FormulaEvaluator(self._formula2, a2).evaluate()
+                if v1 != v2:
+                    if first_counterexample is None:
+                        first_counterexample = {
+                            "assignment": {atoms2[i].name: assignment_values[i] for i in range(n)},
+                            "response_value": v1,
+                            "expected_value": v2,
+                        }
+                    break
+            else:
+                return True, None
 
-            if v1 != v2:
-                assignment_str = {atom.name: val for atom, val in assignment_dict.items()}
-                return False, {
-                    "assignment": assignment_str,
-                    "response_value": v1,
-                    "expected_value": v2,
-                }
-        return True, None
+        return False, first_counterexample
 
 
 class SatisfiabilityEvaluator:

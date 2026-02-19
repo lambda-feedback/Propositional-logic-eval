@@ -126,11 +126,14 @@ def evaluation_function(
                     f"Comparing your formula \"{response_formula}\" with expected \"{equivalent}\". They are not equivalent."
                 ))
                 if counterex:
-                    asn = ", ".join(f"{k}={counterex['assignment'][k]}" for k in sorted(counterex["assignment"]))
-                    feedback.append((
-                        "counterexample",
-                        f"Under assignment ({asn}): your formula = {counterex['response_value']}, expected formula = {counterex['expected_value']}."
-                    ))
+                    if counterex.get("reason"):
+                        feedback.append(("counterexample", counterex["reason"]))
+                    elif counterex.get("assignment") is not None:
+                        asn = ", ".join(f"{k}={counterex['assignment'][k]}" for k in sorted(counterex["assignment"]))
+                        feedback.append((
+                            "counterexample",
+                            f"Under assignment ({asn}): your formula = {counterex['response_value']}, expected formula = {counterex['expected_value']}."
+                        ))
         elif tautology:
             ev = TautologyEvaluator(formula)
             is_correct, counterex = ev.evaluate_with_counterexample()
