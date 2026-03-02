@@ -26,19 +26,4 @@ def preview_function(response: Any, params: Params) -> Result:
     split into many) is entirely up to you.
     """
     
-    return Result(preview=Preview(latex="p", sympy="p"))
-    """
-    feedback   = None
-    is_correct = False
-
-    # parse response into Formula
-    try:
-        formula = formula_parser(response)
-    
-    except BuildError as e:
-        return Result(preview=Preview(feedback = str(e)))
-    except ValueError as e:
-        return Result(preview=Preview(feedback = str(e)))
-
-    return Result(preview=Preview(latex=response, sympy=response))
-    """
+    return Result(preview=Preview(latex=r"p \land q", sympy="And(p, q)"))
