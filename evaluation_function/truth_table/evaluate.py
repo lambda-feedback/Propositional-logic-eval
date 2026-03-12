@@ -77,7 +77,7 @@ def evaluate_truth_table(variables: list[str], cells: list[list[str]], num_atoms
                 if atom not in existing_atoms:
                     return Result(
                         is_correct=False,
-                        feedback_items=[(Exception, f"in column {i+1}, atom {atom} in formula {formula_string} is undefined")]
+                        feedback_items=[(Exception, f"in column {i+1}, atom {atom.name} in formula {formula_string} is undefined")]
                     )
         
         # replace strings with 
@@ -142,13 +142,9 @@ def evaluate_truth_table(variables: list[str], cells: list[list[str]], num_atoms
             expected = FormulaEvaluator(formula, assignment).evaluate()
             got = cells[i][j]
             if expected != got:
-                formula_str = variables[j] if j < len(variables) else f"column {j+1}"
                 return Result(
                     is_correct=False,
-                    feedback_items=[(
-                        Exception,
-                        f"incorrect cell value at row {i+1}, column {j+1} (formula \"{formula_str}\"): expected {'T' if expected else 'F'}, got {'T' if got else 'F'}."
-                    )]
+                    feedback_items=[(Exception, "There is at least one incorrect cell value in the truth table.")]
                 )
             
 
