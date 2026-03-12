@@ -102,7 +102,6 @@ class EquivalenceEvaluator:
         n = len(atoms1)
         first_counterexample = None
         for perm in permutations(range(n)):
-            # perm[j] = index in atoms2 that atoms1[j] is renamed to; so atoms1[j] gets value of atoms2[perm[j]]
             for assignment_values in product([False, True], repeat=n):
                 assignment2_dict = {atoms2[i]: assignment_values[i] for i in range(n)}
                 assignment1_dict = {atoms1[j]: assignment_values[perm[j]] for j in range(n)}
@@ -112,7 +111,6 @@ class EquivalenceEvaluator:
                 v2 = FormulaEvaluator(self._formula2, a2).evaluate()
                 if v1 != v2:
                     if first_counterexample is None:
-                        # Use response formula's atom names (atoms1) so feedback speaks in the user's variables
                         first_counterexample = {
                             "assignment": {atoms1[j].name: assignment_values[perm[j]] for j in range(n)},
                             "response_value": v1,
@@ -121,7 +119,6 @@ class EquivalenceEvaluator:
                     break
             else:
                 return True, None
-
         return False, first_counterexample
 
 
