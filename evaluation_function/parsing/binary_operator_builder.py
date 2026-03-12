@@ -1,5 +1,5 @@
 from typing import Dict, Callable
-from ..domain.formula import Formula, Conjunction, Disjunction, Implication, Biconditional
+from ..domain.formula import Formula, Conjunction, Disjunction, Implication, Biconditional, Xor
 from .token_stream import TokenStream
 from .token import TokenType
 from .expression_builder import ExpressionBuilder
@@ -9,8 +9,9 @@ class BinaryOperatorBuilder(ExpressionBuilder):
     _PRECEDENCE: Dict[TokenType, int] = {
         TokenType.BICONDITIONAL: 1,
         TokenType.IMPLICATION: 2,
-        TokenType.DISJUNCTION: 3,
-        TokenType.CONJUNCTION: 4,
+        TokenType.XOR: 3,
+        TokenType.DISJUNCTION: 4,
+        TokenType.CONJUNCTION: 5,
     }
 
     _OPERATOR_CONSTRUCTORS: Dict[TokenType, Callable[[Formula, Formula], Formula]] = {
@@ -18,6 +19,7 @@ class BinaryOperatorBuilder(ExpressionBuilder):
         TokenType.DISJUNCTION: Disjunction,
         TokenType.IMPLICATION: Implication,
         TokenType.BICONDITIONAL: Biconditional,
+        TokenType.XOR: Xor,
     }
 
     _RIGHT_ASSOCIATIVE: set = {TokenType.IMPLICATION}

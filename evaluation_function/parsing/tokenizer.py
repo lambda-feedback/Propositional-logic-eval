@@ -18,6 +18,7 @@ class Tokenizer:
             SingleCharTokenMatcher("∨", TokenType.DISJUNCTION),
             SingleCharTokenMatcher("→", TokenType.IMPLICATION),
             SingleCharTokenMatcher("↔", TokenType.BICONDITIONAL),
+            SingleCharTokenMatcher("⊕", TokenType.XOR),
             SingleCharTokenMatcher("(", TokenType.LEFT_PAREN),
             SingleCharTokenMatcher(")", TokenType.RIGHT_PAREN),
             AtomTokenMatcher(),

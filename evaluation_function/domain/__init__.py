@@ -8,6 +8,7 @@ from .formula import (
     Disjunction,
     Implication,
     Biconditional,
+    Xor,
 )
 from .evaluators import (
     Assignment,
@@ -27,6 +28,7 @@ __all__ = [
     "Disjunction",
     "Implication",
     "Biconditional",
+    "Xor",
     "Assignment",
     "FormulaEvaluator",
     "EquivalenceEvaluator",

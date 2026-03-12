@@ -10,6 +10,7 @@ from .formula import (
     Disjunction,
     Implication,
     Biconditional,
+    Xor,
 )
 
 
@@ -51,6 +52,10 @@ class FormulaEvaluator:
             return not self._evaluate_formula(formula.left) or self._evaluate_formula(formula.right)
         if isinstance(formula, Biconditional):
             return self._evaluate_formula(formula.left) == self._evaluate_formula(formula.right)
+        if isinstance(formula, Xor):
+            left_val = self._evaluate_formula(formula.left)
+            right_val = self._evaluate_formula(formula.right)
+            return left_val != right_val
         raise TypeError(f"Unknown formula type: {type(formula)}")
 
 
@@ -63,7 +68,7 @@ def _extract_atoms(formula: Formula) -> Set[Atom]:
         pass
     elif isinstance(formula, Negation):
         atoms.update(_extract_atoms(formula.operand))
-    elif isinstance(formula, (Conjunction, Disjunction, Implication, Biconditional)):
+    elif isinstance(formula, (Conjunction, Disjunction, Implication, Biconditional, Xor)):
         atoms.update(_extract_atoms(formula.left))
         atoms.update(_extract_atoms(formula.right))
     

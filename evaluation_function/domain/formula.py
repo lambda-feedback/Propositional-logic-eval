@@ -149,3 +149,8 @@ class Implication(BinaryOperator):
 class Biconditional(BinaryOperator):
     def _operator_symbol(self) -> str:
         return "↔"
+
+
+class Xor(BinaryOperator):
+    def _operator_symbol(self) -> str:
+        return "⊕"
