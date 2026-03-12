@@ -10,6 +10,14 @@ from evaluation_function.parsing.tree_builder_error import BuildError
 
 from evaluation_function.truth_table.evaluate import evaluate_truth_table
 
+_JSON_STRING_NOTE = ("note", "Response was received as a JSON string and was parsed.")
+
+
+def _feedback_with_json_note(feedback_items: list, response_was_json_string: bool) -> list:
+    if not response_was_json_string:
+        return feedback_items
+    return list(feedback_items) + [_JSON_STRING_NOTE]
+
 
 def evaluation_function(
     response: Any,
@@ -39,29 +47,37 @@ def evaluation_function(
     to output the evaluation response.
     """
 
-
+    response_was_json_string = isinstance(response, str)
     try:
+        if response_was_json_string:
+            response = json.loads(response)
+
         if not isinstance(answer, dict):
             return Result(
                 is_correct=False,
-                feedback_items=[("incorrect input", f"missing answer object. got {answer}")]
+                feedback_items=_feedback_with_json_note(
+                    [("incorrect input", "missing answer object")],
+                    response_was_json_string,
+                )
             )
-
-        # If response is a string, parse it as JSON
-        if isinstance(response, str):
-            response = json.loads(response)
 
         if not isinstance(response, dict):
             return Result(
                 is_correct=False,
-                feedback_items=[("incorrect input", "missing response object")]
+                feedback_items=_feedback_with_json_note(
+                    [("incorrect input", "missing response object")],
+                    response_was_json_string,
+                )
             )
 
         response_formula = response.get("formula", None)
         if not isinstance(response_formula, str):
             return Result(
                 is_correct=False,
-                feedback_items=[("incorrect input", "response must be type String")]
+                feedback_items=_feedback_with_json_note(
+                    [("incorrect input", "response must be type String")],
+                    response_was_json_string,
+                )
             )
 
         formula = formula_parser(response_formula)
@@ -83,12 +99,18 @@ def evaluation_function(
         if num_selected == 0:
             return Result(
                 is_correct=False,
-                feedback_items=[("invalid param", "please select a param")]
+                feedback_items=_feedback_with_json_note(
+                    [("invalid param", "please select a param")],
+                    response_was_json_string,
+                )
             )
         if num_selected > 1:
             return Result(
                 is_correct=False,
-                feedback_items=[("invalid param", "please only select 1 param")]
+                feedback_items=_feedback_with_json_note(
+                    [("invalid param", "please only select 1 param")],
+                    response_was_json_string,
+                )
             )
 
         # Truth table mode: validate response truth table if present
@@ -97,7 +119,10 @@ def evaluation_function(
             if response_truth_table is None or not isinstance(response_truth_table, dict):
                 return Result(
                     is_correct=False,
-                    feedback_items=[("incorrect input", "truthTable required when answer expects truth table")]
+                    feedback_items=_feedback_with_json_note(
+                        [("incorrect input", "truthTable required when answer expects truth table")],
+                        response_was_json_string,
+                    )
                 )
             variables = response_truth_table.get("variables", [])
             cells = response_truth_table.get("cells", [])
@@ -105,13 +130,22 @@ def evaluation_function(
             if not isinstance(variables, list) or not isinstance(cells, list):
                 return Result(
                     is_correct=False,
-                    feedback_items=[("incorrect input", "truthTable must contain 'variables' and 'cells' arrays")]
+                    feedback_items=_feedback_with_json_note(
+                        [("incorrect input", "truthTable must contain 'variables' and 'cells' arrays")],
+                        response_was_json_string,
+                    )
                 )
 
             num_atoms = len(_extract_atoms(formula))
             truth_table_result = evaluate_truth_table(variables, cells, num_atoms)
             if not truth_table_result.is_correct:
-                return truth_table_result
+                return Result(
+                    is_correct=False,
+                    feedback_items=_feedback_with_json_note(
+                        getattr(truth_table_result, "feedback_items", []) or [],
+                        response_was_json_string,
+                    )
+                )
 
         is_correct = False
         feedback = []
@@ -160,11 +194,14 @@ def evaluation_function(
             is_correct = True  # already validated above
 
         if feedback:
-            return Result(is_correct=False, feedback_items=feedback)
+            return Result(
+                is_correct=False,
+                feedback_items=_feedback_with_json_note(feedback, response_was_json_string),
+            )
         return Result(is_correct=is_correct)
 
     except Exception as e:
         return Result(
             is_correct=False,
-            feedback_items=[("Error", str(e))]
+            feedback_items=_feedback_with_json_note([("Error", str(e))], response_was_json_string),
         )
