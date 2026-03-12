@@ -112,8 +112,9 @@ class EquivalenceEvaluator:
                 v2 = FormulaEvaluator(self._formula2, a2).evaluate()
                 if v1 != v2:
                     if first_counterexample is None:
+                        # Use response formula's atom names (atoms1) so feedback speaks in the user's variables
                         first_counterexample = {
-                            "assignment": {atoms2[i].name: assignment_values[i] for i in range(n)},
+                            "assignment": {atoms1[j].name: assignment_values[perm[j]] for j in range(n)},
                             "response_value": v1,
                             "expected_value": v2,
                         }
