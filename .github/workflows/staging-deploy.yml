@@ -53,6 +53,7 @@ jobs:
   deploy:
     needs: test
     permissions:
+      contents: read
       packages: write
       id-token: write
     uses: lambda-feedback/evaluation-function-workflows/.github/workflows/deploy.yml@main
